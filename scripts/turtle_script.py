@@ -10,7 +10,6 @@ lines = content.split('\n')
 
 turtle.setup(width = 1000, height = 1000, startx = 0, starty = 0)
 turtle.speed(100000)
-turtle.degrees()
 
 for step in lines:
     match = re.search(r'\d+', step)
