@@ -11,3 +11,11 @@ and then, we try
 `whoami`
 we have
 `root`
+
+```sh
+boot: live init=/bin/sh
+/bin/sh: 0: can not access tty; job control turned off
+# whoami
+root
+#
+```sh
