@@ -1,10 +1,12 @@
 # Write Up 2
 
 After some search on google for "gain root access linux hack"
+
 This website "https://book.hacktricks.xyz/linux-unix/privilege-escalation" mentioned a CVE (Common Vulnerabilities and Exposures) called dirty cow CVE-2016-5195 (DirtyCow)
+
 The CVE DirtyCow can be used to do "Linux Privilege Escalation" if the linux Kernel is a older version then 3.19.0-73.8
 
-# once upon a time there is famous vulnerability on linux called dirty cow.
+# Once upon a time there is famous vulnerability on linux called dirty cow.
 
 ```
 Dirty COW (Dirty copy-on-write) is a computer security vulnerability for the Linux kernel that affected all Linux-based operating systems, including Android devices, that used older versions of the Linux kernel created before 2018. It is a local privilege escalation bug that exploits a race condition in the implementation of the copy-on-write mechanism in the kernel's memory-management subsystem. Computers and devices that still use the older kernels remain vulnerable.
@@ -25,7 +27,7 @@ source forum : https://github.com/FireFart/dirtycow/blob/master/dirty.c
 source github exploit : https://github.com/dirtycow/dirtycow.github.io/wiki/PoCs
 source github code exploit : https://github.com/FireFart/dirtycow/blob/master/dirty.c
 
-# can we try the same technique ? -
+# Can we try the same technique ? -
 
 I checked the kernel version to see if any vulnerability exist
 
@@ -41,32 +43,45 @@ so this vulnerability does exsit
 
 from above resource, we have code in dirty.c like https://github.com/FireFart/dirtycow/blob/master/dirty.c
 
-#  Explanation
+#  Explaination
 
 Base on the explaination from this youtuber "https://www.youtube.com/watch?v=kEsshExn7aE"
+
 The dirtyCow is using the race condition with 2 thread,
 
-First thread
+<h3>First thread</h3>
 
 `map = mmap(NULL, st.st_size + sizeof(long), PROT_READ, MAP_PRIVATE, f, 0)`
+
 nmap is the foundation of malloc which will set aside an allocated zone where the program could use to do data manipulation,
+
 PROT_READ means that the memory is read only, but MAP_PRIVATE will allow the program to `copy-on-write` (COW) which will create a copy to write on, instead of writing directly on the data itself.
+
 But copy of data will require some time, so this is the condition were the 2nd thread is trying to race on.
 
-Second thread
+<h3>Second thread</h3>
 
 `madvise(map, 100, MADV_DONTNEED)`
+
 madvise is memory advice, which as the name suggest will give advice on how the memory will behave,
+
 Here it advice that first 100 bytes is probably `Not needed` so it is available to be use.
 
+
 Combining the 2 thread, what will normally happens is that we will make the program to do a write on the memory, which MAP_PRIVATE will cause a copy of the data to be created which will be used to write on,
+
 Next `madvise` will mark the 1st 100bytes as `Not needed` so this allocated zone will be available to be use.
+
 But on a rare case where the 2nd thread catched up on the 1st thread while it is creating a copy,
+
 The copied data will be marked as `Not needed` and the 1st thread will write to the original read only data, instead of the copied data.
+
 This will cause the file that normally could not be written on become overwritten, this completing the exploit
 
 with this, we just have to compile it with : `gcc -pthread dirty.c -o dirty -lcrypt`
+
 Now, just run the binary with `./dirty`, enter the password for new user, or leave it blank
+
 Depending on the machine, this might take several minutes, so grab a coffee and wait the exploit to work :)
 
 ```console
